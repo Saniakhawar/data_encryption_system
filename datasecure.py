@@ -1,4 +1,3 @@
-
 import streamlit as st
 import hashlib
 import json
@@ -82,7 +81,7 @@ elif choice == "📝 Register":
             else:
                 stored_data[username] = {
                     "password": hash_password(password),
-                    "data": {}
+                    "data": []  # ✅ FIXED: Initialize with a list
                 }
                 save_data(stored_data)
                 st.session_state.users.append(username)
@@ -108,47 +107,34 @@ elif choice == "🔑 Login":
             if stored_password == hash_password(password):
                 st.session_state.authenticated_user = username
                 st.session_state.failed_attempts = 0
-                st.success(f"✅ LOgg in Succesfull")
+                st.success(f"✅ Login Successful. Welcome {username}!")
             else:
                 st.session_state.failed_attempts += 1
-                st.error("Incorrect password")
+                remaining = 3 - st.session_state.failed_attempts
+                st.error(f"❌ Incorrect password. Attempts left: {remaining}")
         else:
-            st.error(" Username not found.")
+            st.error("❌ Username not found.")
 
         if st.session_state.failed_attempts >= 3:
             st.session_state.lockout_time = time.time() + LOCKOUT_DURATION
             st.warning("⛔ Too many failed attempts. Locked for 60 seconds.")
+            st.stop()
 
-            username = st.text_input(" Username")
-            password = st.text_input("Password", type="password")
-
-            if st.button("Login"):
-                if username in stored_data and stored_data[username]["password"] == hash_password(password):
-                 st.session_state.authenticated_user = username
-                 st.session_state.failed_attempts = 0
-                 st.success(f"✅Welcome {username}!")
-                else:
-                    st.session_state.failed_attempts += 1
-                    remaining =3 - st.session_state.failed_attempts
-                    st.error(f"❌ Incorrect password. Try again in {remaining} attempts.")
-                    if st.session_state.failed_attempts >= 3:
-                        st.session_state.lockout_time = time.time() + LOCKOUT_DURATION
-                        st.warning("⛔ Too many failed attempts. Locked for 60 seconds.")
-                        st.stop()
-
-        # ==== Store Data ====
+# ==== Store Data ====
 elif choice == "💾 Store Data":
+    st.subheader("💾 Store Encrypted Data")
+
     if not st.session_state.authenticated_user:
         st.warning("🔒 Please login first.")
     else:
-        st.subheader("💾 Store Encrypted Data")
         data = st.text_area("📄 Enter data to encrypt")
-        passkey = st.text_input("🔑 Encryption key (passphrase)", type="password")
+        passkey = st.text_input("🔑 Encryption Key (Passphrase)", type="password")
 
         if st.button("Encrypt and Save"):
             if data and passkey:
                 encrypted = encrypt_data(data, passkey)
-                stored_data[st.session_state.authenticated_user]["data"].append(encrypted)
+                username = st.session_state.authenticated_user
+                stored_data[username]["data"].append(encrypted)  # ✅ Append to list
                 save_data(stored_data)
                 st.success("✅ Data encrypted and saved successfully!")
             else:
@@ -156,11 +142,14 @@ elif choice == "💾 Store Data":
 
 # ==== Retrieve Data ====
 elif choice == "📂 Retrieve Data":
+    st.subheader("📂 Retrieve Encrypted Data")
+
     if not st.session_state.authenticated_user:
         st.warning("🔒 Please login first.")
     else:
-        st.subheader("📂 Retrieve Encrypted Data")
-        user_data = stored_data.get(st.session_state.authenticated_user, {}).get("data", [])
+        username = st.session_state.authenticated_user
+        user_data = stored_data.get(username, {}).get("data", [])
+
         if not user_data:
             st.info("ℹ️ No data found.")
         else:
@@ -176,13 +165,4 @@ elif choice == "📂 Retrieve Data":
                 if result:
                     st.success(f"✅ Decrypted text: {result}")
                 else:
-                    st.error("❌ Decryption failed.")
-
-
-
-
-
-                   
-
-                    
-    
+                    st.error("❌ Decryption failed. Invalid key or text.")
