@@ -136,49 +136,47 @@ elif choice == "🔑 Login":
                         st.warning("⛔ Too many failed attempts. Locked for 60 seconds.")
                         st.stop()
 
-           #==== data store section ===
-            elif choice == "Store Data" :
-                if not st.session_state.authenticated_user:
-                    st.warning("Please login first.")
-                    data = st.text_area("Enter data to encrpty")
-                    passkey =st.text_input("Enscryption key (passphras)", type="password")
-                if st.button("Encrypt and Save"):
-                     if data and passkey:
-                      encrypted = encrypt_data(data, passkey)
-                      stored_data[st.session_state.authenticated_user]["data"].append(encrypted)
-                      save_data(stored_data)
-                      st.success("✅ Data encrypted and saved successfully!")
-                else: 
-                            st.serror("All fields are required to fill")
+        # ==== Store Data ====
+elif choice == "💾 Store Data":
+    if not st.session_state.authenticated_user:
+        st.warning("🔒 Please login first.")
+    else:
+        st.subheader("💾 Store Encrypted Data")
+        data = st.text_area("📄 Enter data to encrypt")
+        passkey = st.text_input("🔑 Encryption key (passphrase)", type="password")
 
-                            # == data retieve data section ===
-            elif choice == "Retrieve Data" :
-                        if not st.session_state.authenticated_user:
-                            st.warning("🔓 Please login first.")
-                        else:
-                            st.subheader("🔍Retieve data")
-                            user_data = stored_data.gets(st.session_stata.authenticared_user,{}).get("data",{})
-                            if not user_data:
-                                st.info("No Data Found!")
-                            else:
-                                st.write("Encrypted Data Enterises:")
-                                for i, item in enumerate(user_data):
-                                       st.code(item, language="text")
+        if st.button("Encrypt and Save"):
+            if data and passkey:
+                encrypted = encrypt_data(data, passkey)
+                stored_data[st.session_state.authenticated_user]["data"].append(encrypted)
+                save_data(stored_data)
+                st.success("✅ Data encrypted and saved successfully!")
+            else:
+                st.error("❌ All fields are required.")
 
-                                encrypted_input = st.text_area("🔐 Enter Encrypted Text to Decrypt")
-                                passkey = st.text_input("🔑 Enter Passkey to Decrypt", type="password")
+# ==== Retrieve Data ====
+elif choice == "📂 Retrieve Data":
+    if not st.session_state.authenticated_user:
+        st.warning("🔒 Please login first.")
+    else:
+        st.subheader("📂 Retrieve Encrypted Data")
+        user_data = stored_data.get(st.session_state.authenticated_user, {}).get("data", [])
+        if not user_data:
+            st.info("ℹ️ No data found.")
+        else:
+            st.write("🔐 Encrypted Entries:")
+            for i, item in enumerate(user_data):
+                st.code(item, language="text")
 
-                                if st.button("Decrypt"):
-                                        result = decrypt_text(encrypted_input,passkey)
-                                        if result:
-                                            st.succcess(f"✅ Decrypted text: {result}")
-                                        else:
-                                            st.error("❌ Decryption failed.")
+            encrypted_input = st.text_area("🔐 Enter Encrypted Text to Decrypt")
+            passkey = st.text_input("🔑 Enter Passkey to Decrypt", type="password")
 
-                                              
-
-
-
+            if st.button("Decrypt"):
+                result = decrypt_text(encrypted_input, passkey)
+                if result:
+                    st.success(f"✅ Decrypted text: {result}")
+                else:
+                    st.error("❌ Decryption failed.")
 
 
 
